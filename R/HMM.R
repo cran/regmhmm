@@ -1,0 +1,72 @@
+#' @title Fitting Hidden Markov Models using Expectation-Maximization (EM) Algorithm
+#' @description
+#' Fit Hidden Markov Models (HMMs) to the provided data using an iterative Expectation-Maximization (EM) algorithm. This method alternates between the E-step (Expectation) and M-step (Maximization) to iteratively optimize model parameters. The algorithm ensures convergence and provides robust estimates for latent state probabilities and transition probabilities, contributing to the accurate characterization of underlying patterns in the data.
+#' 
+#' @param delta a vector of length S specifying the initial probabilities.
+#' @param A a matrix of size S x S specifying the transition probabilities.
+#' @param B a matrix of size S x (p + 1) specifying the GLM parameters of the emission probabilities.
+#' @param Y_mat a matrix of observations of size N x T.
+#' @param X_cube a design array of size T x p x N.
+#' @param family the family of the response.
+#' @param trace logical indicating if detailed output should be produced during the fitting process.
+#' @param ... other arguments to be passed to the next method.
+#'
+#' @returns
+#' A list object with the following slots:
+#'
+#' \item{delta_hat}{the estimate of delta.}
+#'
+#' \item{A_hat}{the estimate of A.}
+#'
+#' \item{B_hat}{the estimate of B.}
+#'
+#' \item{log_likelihood}{the log-likelihood of the model.}
+#'
+#' @examples
+#' # Example usage of the function
+#' seed_num <- 1
+#' p_noise <- 2
+#' N <- 100
+#' N_persub <- 10
+#' parameters_setting <- list(
+#'   init_vec = c(0.5, 0.5),
+#'   trans_mat = matrix(c(0.7, 0.3, 0.2, 0.8), nrow = 2, byrow = TRUE),
+#'   emis_mat = matrix(c(1, 0.5, 0.5, 2), nrow = 2, byrow = TRUE)
+#' )
+#' simulated_data <- simulate_HMM_data(seed_num, p_noise, N, N_persub, parameters_setting)
+#' 
+#' init_start = c(0.5, 0.5)
+#' trans_start = matrix(c(0.5, 0.5, 0.5, 0.5), nrow = 2)
+#' emis_start = matrix(rep(1, 8), nrow = 2)
+#' 
+#' HMM_fit <- HMM(delta=as.matrix(init_start),
+#'                Y_mat=simulated_data$y_mat,
+#'                A=trans_start,
+#'                B=emis_start,
+#'                X_cube=simulated_data$X_array,
+#'                family="P",
+#'                eps=1e-4,
+#'                trace = 0
+#' )
+#'
+#' @export
+HMM <- function(delta,
+                Y_mat,
+                A,
+                B,
+                X_cube,
+                family,
+                trace,
+                ...) {
+  get_HMM_C_raw <- HMM_C_raw(
+    delta,
+    Y_mat,
+    A,
+    B,
+    X_cube,
+    family,
+    ...
+  )
+  class(get_HMM_C_raw) <- "HMM"
+  return(get_HMM_C_raw)
+}
